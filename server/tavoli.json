@@ -1,0 +1,11 @@
+{
+  "id": 1,
+  "reservations": [
+    {
+      "id": 1765881951589,
+      "nome": "andrea",
+      "oraInizio": 1765872000,
+      "oraFine": 1765875600
+    }
+  ]
+}
