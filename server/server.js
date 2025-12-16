@@ -7,8 +7,19 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const JSON_FILE = path.join(__dirname, 'tavoli.json');
 
+// Configurazione CORS per permettere richieste da Vercel e localhost
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    /\.vercel\.app$/,  // Permette tutti i domini Vercel
+    /\.vercel\.dev$/
+  ],
+  credentials: true
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // GET - Ottieni tutti i tavoli con le prenotazioni
