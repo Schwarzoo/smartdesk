@@ -1,5 +1,5 @@
 // URL base del server
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://server-restless-star-9200.fly.dev';
 
 // Funzione per inviare una prenotazione al server
 export const inviaPrenotazione = async (datiPrenotazione) => {
