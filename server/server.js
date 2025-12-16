@@ -5,7 +5,9 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const JSON_FILE = path.join(__dirname, 'tavoli.json');
+// Se siamo su fly.io, usa il volume persistente, altrimenti usa la directory locale
+const DATA_DIR = process.env.FLY_APP_NAME ? '/data' : __dirname;
+const JSON_FILE = path.join(DATA_DIR, 'tavoli.json');
 
 // Configurazione CORS per permettere richieste da Vercel e localhost
 const corsOptions = {
@@ -21,6 +23,21 @@ const corsOptions = {
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Inizializza il file JSON se non esiste
+async function initializeJsonFile() {
+  try {
+    await fs.access(JSON_FILE);
+  } catch {
+    // Il file non esiste, crealo con la struttura iniziale
+    const initialData = { id: 1, reservations: [] };
+    await fs.writeFile(JSON_FILE, JSON.stringify(initialData, null, 2));
+    console.log('File tavoli.json creato nel volume persistente');
+  }
+}
+
+// Chiama l'inizializzazione all'avvio
+initializeJsonFile();
 
 // GET - Ottieni tutti i tavoli con le prenotazioni
 app.get('/api/tavoli', async (req, res) => {
