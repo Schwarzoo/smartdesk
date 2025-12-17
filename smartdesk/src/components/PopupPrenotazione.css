@@ -1,0 +1,55 @@
+.popup-prenotazione {
+  padding: 20px;
+  border: 1px solid #007bff;
+  margin: 20px;
+  max-width: 400px;
+  background-color: white;
+  border-radius: 10px;
+}
+
+.popup-prenotazione h2 {
+  margin-top: 0;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-input {
+  padding: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.divider {
+  margin: 15px 0;
+}
+
+.riepilogo {
+  margin-bottom: 15px;
+}
+
+.btn-conferma {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 16px;
+}
+
+.btn-conferma:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-conferma:hover:not(:disabled) {
+  background-color: #0056b3;
+}

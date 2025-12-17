@@ -30,7 +30,7 @@ async function initializeJsonFile() {
     await fs.access(JSON_FILE);
   } catch {
     // Il file non esiste, crealo con la struttura iniziale
-    const initialData = { id: 1, reservations: [] };
+    const initialData = [];
     await fs.writeFile(JSON_FILE, JSON.stringify(initialData, null, 2));
     console.log('File tavoli.json creato nel volume persistente');
   }
@@ -52,15 +52,24 @@ app.get('/api/tavoli', async (req, res) => {
 // POST - Aggiungi una prenotazione
 app.post('/api/prenotazioni', async (req, res) => {
   try {
-    const { nome, oraInizio, oraFine } = req.body;
+    const { id, nome, oraInizio, oraFine } = req.body;
     
-    if (!nome || !oraInizio || !oraFine) {
+    if (!id || !nome || !oraInizio || !oraFine) {
       return res.status(400).json({ error: 'Dati mancanti' });
     }
 
     // Leggi il file corrente
     const data = await fs.readFile(JSON_FILE, 'utf8');
-    const tavoli = JSON.parse(data);
+    let tavoli = JSON.parse(data);
+
+    // Trova il tavolo con l'id specificato
+    let tavolo = tavoli.find(t => t.id === id);
+    
+    // Se il tavolo non esiste, crealo
+    if (!tavolo) {
+      tavolo = { id, reservations: [] };
+      tavoli.push(tavolo);
+    }
 
     // Aggiungi la prenotazione
     const nuovaPrenotazione = {
@@ -70,7 +79,7 @@ app.post('/api/prenotazioni', async (req, res) => {
       oraFine
     };
 
-    tavoli.reservations.push(nuovaPrenotazione);
+    tavolo.reservations.push(nuovaPrenotazione);
 
     // Salva il file
     await fs.writeFile(JSON_FILE, JSON.stringify(tavoli, null, 2));
@@ -89,13 +98,21 @@ app.delete('/api/prenotazioni/:id', async (req, res) => {
     const data = await fs.readFile(JSON_FILE, 'utf8');
     const tavoli = JSON.parse(data);
 
-    const index = tavoli.reservations.findIndex(r => r.id === id);
+    // Cerca la prenotazione in tutti i tavoli
+    let trovata = false;
+    for (const tavolo of tavoli) {
+      const index = tavolo.reservations.findIndex(r => r.id === id);
+      if (index !== -1) {
+        tavolo.reservations.splice(index, 1);
+        trovata = true;
+        break;
+      }
+    }
     
-    if (index === -1) {
+    if (!trovata) {
       return res.status(404).json({ error: 'Prenotazione non trovata' });
     }
 
-    tavoli.reservations.splice(index, 1);
     await fs.writeFile(JSON_FILE, JSON.stringify(tavoli, null, 2));
 
     res.json({ message: 'Prenotazione eliminata' });

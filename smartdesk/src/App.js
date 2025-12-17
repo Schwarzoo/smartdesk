@@ -1,12 +1,11 @@
-import React, {useState} from 'react';
+import React from 'react';
+import Mappa from './components/Mappa';
+import './App.css';
 
-import Tavolo from './components/Tavolo';
-
-const App =  () =>{
-
+const App = () => {
   return (
-    <div>
-      <Tavolo />
+    <div className="App">
+      <Mappa />
     </div>
   )
 

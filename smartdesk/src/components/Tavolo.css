@@ -1,0 +1,9 @@
+.tavolo {
+  position: absolute;
+  width: 80px;
+  height: 40px;
+  background-color: #8B4513;
+  border-radius: 5px;
+  border: 2px solid #654321;
+  cursor: pointer;
+}
