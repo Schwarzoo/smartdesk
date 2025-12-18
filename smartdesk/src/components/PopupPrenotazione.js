@@ -9,6 +9,18 @@ function PopupPrenotazione({ tavoloId, onClose }) {
   const [oraFine, setOraFine] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Calcola oggi e domani in formato YYYY-MM-DD
+  const getDataOggi = () => {
+    const oggi = new Date();
+    return oggi.toISOString().split('T')[0];
+  };
+
+  const getDataDomani = () => {
+    const domani = new Date();
+    domani.setDate(domani.getDate() + 1);
+    return domani.toISOString().split('T')[0];
+  };
+
   // Funzione per convertire data + ora in timestamp Unix
   const convertiInUnix = (data, ora) => {
     const [anno, mese, giorno] = data.split('-');
@@ -84,6 +96,8 @@ function PopupPrenotazione({ tavoloId, onClose }) {
           type="date"
           value={data} 
           onChange={e => setData(e.target.value)} 
+          min={getDataOggi()}
+          max={getDataDomani()}
           className="form-input"
         />
       </div>
