@@ -13,7 +13,16 @@ export const inviaPrenotazione = async (datiPrenotazione) => {
     });
 
     if (!response.ok) {
-      throw new Error(`Errore HTTP: ${response.status}`);
+      let message = `Errore HTTP: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData?.error) {
+          message = errorData.error;
+        }
+      } catch {
+        // Ignora errori di parsing e usa il messaggio HTTP di fallback
+      }
+      throw new Error(message);
     }
 
     const data = await response.json();

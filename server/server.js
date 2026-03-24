@@ -58,6 +58,13 @@ app.post('/api/prenotazioni', async (req, res) => {
       return res.status(400).json({ error: 'Dati mancanti' });
     }
 
+    const inizio = Number(oraInizio);
+    const fine = Number(oraFine);
+
+    if (!Number.isFinite(inizio) || !Number.isFinite(fine) || inizio >= fine) {
+      return res.status(400).json({ error: 'Intervallo orario non valido' });
+    }
+
     // Leggi il file corrente
     const data = await fs.readFile(JSON_FILE, 'utf8');
     let tavoli = JSON.parse(data);
@@ -71,12 +78,22 @@ app.post('/api/prenotazioni', async (req, res) => {
       tavoli.push(tavolo);
     }
 
+    const sovrapposta = tavolo.reservations.some((prenotazione) => {
+      const prenInizio = Number(prenotazione.oraInizio);
+      const prenFine = Number(prenotazione.oraFine);
+      return prenInizio < fine && inizio < prenFine;
+    });
+
+    if (sovrapposta) {
+      return res.status(409).json({ error: 'Orario non disponibile' });
+    }
+
     // Aggiungi la prenotazione
     const nuovaPrenotazione = {
       id: Date.now(),
       nome,
-      oraInizio,
-      oraFine
+      oraInizio: inizio,
+      oraFine: fine
     };
 
     tavolo.reservations.push(nuovaPrenotazione);

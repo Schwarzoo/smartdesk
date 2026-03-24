@@ -36,13 +36,21 @@ function PopupPrenotazione({ tavoloId, onClose }) {
       return;
     }
 
+    const timestampInizio = convertiInUnix(data, oraInizio);
+    const timestampFine = convertiInUnix(data, oraFine);
+
+    if (timestampInizio >= timestampFine) {
+      alert('L\'orario di fine deve essere successivo all\'orario di inizio.');
+      return;
+    }
+
     setLoading(true);
 
     const datiPrenotazione = {
-      id: tavoloId,
+      id: tavoloId, 
       nome,
-      oraInizio: convertiInUnix(data, oraInizio),
-      oraFine: convertiInUnix(data, oraFine)
+      oraInizio: timestampInizio,
+      oraFine: timestampFine
     };
 
     const risultato = await inviaPrenotazione(datiPrenotazione);
@@ -53,7 +61,11 @@ function PopupPrenotazione({ tavoloId, onClose }) {
       alert(`Prenotazione confermata!\nNome: ${nome}\nData: ${data}\nDalle: ${oraInizio}\nAlle: ${oraFine}`);
       onClose();
     } else {
-      alert(`Errore: ${risultato.error}\nAssicurati che il server sia avviato!`);
+      if (risultato.error === 'Orario non disponibile') {
+        alert('Orario non disponibile');
+      } else {
+        alert(`Errore: ${risultato.error}`);
+      }
     }
   };
 
