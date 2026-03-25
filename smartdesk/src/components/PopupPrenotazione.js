@@ -38,6 +38,12 @@ function PopupPrenotazione({ tavoloId, onClose }) {
 
     const timestampInizio = convertiInUnix(data, oraInizio);
     const timestampFine = convertiInUnix(data, oraFine);
+    const adesso = Math.floor(Date.now() / 1000);
+
+    if (timestampInizio < adesso) {
+      alert('Non puoi effettuare una prenotazione in un periodo precedente a quello attuale.');
+      return;
+    }
 
     if (timestampInizio >= timestampFine) {
       alert('L\'orario di fine deve essere successivo all\'orario di inizio.');
