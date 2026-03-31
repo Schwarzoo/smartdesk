@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { inviaPrenotazione } from '../utils/apiService';
+import { inviaPrenotazione, ottieniPrenotazioni, eliminaPrenotazione } from '../utils/apiService';
 import './PopupPrenotazione.css';
 
 function PopupPrenotazione({ tavoloId, onClose }) {
@@ -8,6 +8,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
   const [oraInizio, setOraInizio] = useState('');
   const [oraFine, setOraFine] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingEliminaTutte, setLoadingEliminaTutte] = useState(false);
 
   // Calcola oggi e domani in formato YYYY-MM-DD
   const getDataOggi = () => {
@@ -73,6 +74,50 @@ function PopupPrenotazione({ tavoloId, onClose }) {
         alert(`Errore: ${risultato.error}`);
       }
     }
+  };
+
+  const handleEliminaTuttePrenotazioni = async () => {
+    const conferma = window.confirm('Vuoi davvero eliminare tutte le prenotazioni?');
+    if (!conferma) {
+      return;
+    }
+
+    setLoadingEliminaTutte(true);
+
+    const risultatoTavoli = await ottieniPrenotazioni();
+
+    if (!risultatoTavoli.success) {
+      setLoadingEliminaTutte(false);
+      alert(`Errore: ${risultatoTavoli.error}`);
+      return;
+    }
+
+    const idsPrenotazioni = risultatoTavoli.data
+      .flatMap((tavolo) => tavolo.reservations || [])
+      .map((prenotazione) => prenotazione.id);
+
+    if (idsPrenotazioni.length === 0) {
+      setLoadingEliminaTutte(false);
+      alert('Non ci sono prenotazioni da eliminare.');
+      return;
+    }
+
+    let errori = 0;
+    for (const idPrenotazione of idsPrenotazioni) {
+      const risultatoEliminazione = await eliminaPrenotazione(idPrenotazione);
+      if (!risultatoEliminazione.success) {
+        errori += 1;
+      }
+    }
+
+    setLoadingEliminaTutte(false);
+
+    if (errori > 0) {
+      alert(`Eliminazione completata con ${errori} errore/i.`);
+      return;
+    }
+
+    alert('Tutte le prenotazioni sono state eliminate.');
   };
 
   // Funzione per generare gli orari con intervallo di 15 minuti
@@ -167,6 +212,14 @@ function PopupPrenotazione({ tavoloId, onClose }) {
         className="btn-conferma"
       >
         {loading ? 'Invio in corso...' : 'Conferma Prenotazione'}
+      </button>
+
+      <button
+        onClick={handleEliminaTuttePrenotazioni}
+        disabled={loadingEliminaTutte}
+        className="btn-elimina-tutte"
+      >
+        {loadingEliminaTutte ? 'Eliminazione in corso...' : 'Elimina prenotazioni'}
       </button>
     </div>
   );

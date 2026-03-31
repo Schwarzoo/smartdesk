@@ -53,3 +53,24 @@
 .btn-conferma:hover:not(:disabled) {
   background-color: #0056b3;
 }
+
+.btn-elimina-tutte {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 16px;
+}
+
+.btn-elimina-tutte:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-elimina-tutte:hover:not(:disabled) {
+  background-color: #b02a37;
+}
