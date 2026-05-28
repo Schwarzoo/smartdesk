@@ -1,5 +1,5 @@
 .popup-prenotazione {
-  width: min(1240px, 96vw);
+  width: min(1240px, 90vw);
   max-height: 92vh;
   overflow: auto;
   padding: 24px;
