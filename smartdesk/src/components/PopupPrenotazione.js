@@ -412,8 +412,12 @@ function PopupPrenotazione({ tavoloId, onClose }) {
 
           <div className="calendar-grid" role="grid" aria-label="Calendario prenotazioni tavolo">
             <div className="calendar-corner">Ora</div>
-            {weekDays.map((day) => (
-              <div key={toDateKey(day)} className="day-header">
+            {weekDays.map((day, dayIndex) => (
+              <div
+                key={toDateKey(day)}
+                className="day-header"
+                style={{ gridRow: 1, gridColumn: dayIndex + 2 }}
+              >
                 <span>{formatDayLabel(day)}</span>
               </div>
             ))}
@@ -421,14 +425,18 @@ function PopupPrenotazione({ tavoloId, onClose }) {
             {slots.map((slotIndex) => {
               const slotLabelDate = getSlotStart(weekDays[0], slotIndex);
               const timeLabel = slotIndex % 4 === 0 ? formatHourLabel(slotLabelDate) : '';
+              const rowNumber = slotIndex + 2;
 
               return (
                 <React.Fragment key={slotIndex}>
-                  <div className="time-label">{timeLabel}</div>
+                  <div className="time-label" style={{ gridRow: rowNumber, gridColumn: 1 }}>
+                    {timeLabel}
+                  </div>
 
-                  {weekDays.map((day) => {
+                  {weekDays.map((day, dayIndex) => {
                     const status = getCellStatus(day, slotIndex);
                     const dayKey = toDateKey(day);
+                    const columnNumber = dayIndex + 2;
 
                     if (status.type === 'reserved' && !status.isStart) {
                       return null;
@@ -438,6 +446,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                       'calendar-slot',
                       status.type,
                       status.type === 'reserved' ? 'reservation-block' : '',
+                      status.type === 'reserved' && status.span === 1 ? 'single-slot' : '',
                       status.isStart ? 'is-start' : '',
                       status.isEnd ? 'is-end' : '',
                     ].filter(Boolean).join(' ');
@@ -460,7 +469,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                           type="button"
                           key={dayKey}
                           className={className}
-                          style={{ gridRow: slotIndex + 2, gridColumn: weekDays.indexOf(day) + 2 }}
+                          style={{ gridRow: rowNumber, gridColumn: columnNumber }}
                           onClick={() => handleSlotClick(day, slotIndex)}
                           title={`${formatDayLabel(day)} ${formatHourLabel(getSlotStart(day, slotIndex))}`}
                         >
@@ -475,7 +484,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                         className={className}
                         style={{
                           gridRow: `${status.startIndex + 2} / span ${status.span}`,
-                          gridColumn: weekDays.indexOf(day) + 2,
+                          gridColumn: columnNumber,
                         }}
                         title={reservationLabel}
                       >

@@ -186,6 +186,13 @@
   justify-content: center;
 }
 
+.calendar-slot.reservation-block.single-slot {
+  padding: 0 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
 .calendar-slot.selected {
   background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
   color: #0f4c81;
