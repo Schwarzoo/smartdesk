@@ -437,6 +437,15 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                     const status = getCellStatus(day, slotIndex);
                     const dayKey = toDateKey(day);
                     const columnNumber = dayIndex + 2;
+                    const cellStyle = status.type === 'reserved'
+                      ? {
+                          gridRow: `${status.startIndex + 2} / span ${status.span}`,
+                          gridColumn: columnNumber,
+                        }
+                      : {
+                          gridRow: rowNumber,
+                          gridColumn: columnNumber,
+                        };
 
                     if (status.type === 'reserved' && !status.isStart) {
                       return null;
@@ -469,7 +478,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                           type="button"
                           key={dayKey}
                           className={className}
-                          style={{ gridRow: rowNumber, gridColumn: columnNumber }}
+                          style={cellStyle}
                           onClick={() => handleSlotClick(day, slotIndex)}
                           title={`${formatDayLabel(day)} ${formatHourLabel(getSlotStart(day, slotIndex))}`}
                         >
@@ -482,10 +491,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                       <div
                         key={dayKey}
                         className={className}
-                        style={{
-                          gridRow: `${status.startIndex + 2} / span ${status.span}`,
-                          gridColumn: columnNumber,
-                        }}
+                        style={cellStyle}
                         title={reservationLabel}
                       >
                         {cellContent}
