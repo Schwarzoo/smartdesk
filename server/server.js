@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-// Se siamo su fly.io, usa il volume persistente, altrimenti usa la directory locale
+// Se siamo    fly.io, usa il volume persistente, altrimenti usa la directory locale
 const DATA_DIR = process.env.FLY_APP_NAME ? '/data' : __dirname;
 const JSON_FILE = path.join(DATA_DIR, 'tavoli.json');
 
@@ -24,15 +24,22 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Inizializza il file JSON se non esiste
 async function initializeJsonFile() {
   try {
-    await fs.access(JSON_FILE);
-  } catch {
-    // Il file non esiste, crealo con la struttura iniziale
-    const initialData = [];
-    await fs.writeFile(JSON_FILE, JSON.stringify(initialData, null, 2));
-    console.log('File tavoli.json creato nel volume persistente');
+    // Crea la directory /data se non esiste
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    
+    try {
+      await fs.access(JSON_FILE);
+    } catch {
+      // Il file non esiste, crealo con la struttura iniziale
+      const initialData = [];
+      await fs.writeFile(JSON_FILE, JSON.stringify(initialData, null, 2));
+      console.log('File tavoli.json creato nel volume persistente');
+    }
+  } catch (error) {
+    console.error('Errore inizializzazione:', error);
+    process.exit(1);
   }
 }
 
@@ -60,9 +67,14 @@ app.post('/api/prenotazioni', async (req, res) => {
 
     const inizio = Number(oraInizio);
     const fine = Number(oraFine);
+    const adesso = Math.floor(Date.now() / 1000);
 
     if (!Number.isFinite(inizio) || !Number.isFinite(fine) || inizio >= fine) {
       return res.status(400).json({ error: 'Intervallo orario non valido' });
+    }
+
+    if (inizio < adesso) {
+      return res.status(400).json({ error: 'Non puoi prenotare in un periodo precedente a quello attuale' });
     }
 
     // Leggi il file corrente
