@@ -208,6 +208,9 @@ function PopupPrenotazione({ tavoloId, onClose }) {
           type: 'selected',
           isStart: slotIndex === startIndex,
           isEnd: slotIndex === endIndex,
+          startIndex,
+          endIndex,
+          span: endIndex - startIndex + 1,
         };
       }
     }
@@ -442,12 +445,17 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                           gridRow: `${status.startIndex + 2} / span ${status.span}`,
                           gridColumn: columnNumber,
                         }
+                      : status.type === 'selected'
+                        ? {
+                            gridRow: `${status.startIndex + 2} / span ${status.span}`,
+                            gridColumn: columnNumber,
+                          }
                       : {
                           gridRow: rowNumber,
                           gridColumn: columnNumber,
                         };
 
-                    if (status.type === 'reserved' && !status.isStart) {
+                    if ((status.type === 'reserved' || status.type === 'selected') && !status.isStart) {
                       return null;
                     }
 
@@ -455,7 +463,9 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                       'calendar-slot',
                       status.type,
                       status.type === 'reserved' ? 'reservation-block' : '',
+                      status.type === 'selected' ? 'selection-block' : '',
                       status.type === 'reserved' && status.span === 1 ? 'single-slot' : '',
+                      status.type === 'selected' && status.span === 1 ? 'single-slot' : '',
                       status.isStart ? 'is-start' : '',
                       status.isEnd ? 'is-end' : '',
                     ].filter(Boolean).join(' ');

@@ -193,6 +193,31 @@
   line-height: 1.1;
 }
 
+.calendar-slot.selection-block {
+  z-index: 1;
+  margin: 1px;
+  border-radius: 12px;
+  padding: 10px 8px;
+  align-self: stretch;
+  justify-self: stretch;
+  height: calc(100% - 2px);
+  white-space: normal;
+  text-align: center;
+  line-height: 1.35;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #0f4c81;
+  font-weight: 700;
+}
+
+.calendar-slot.selection-block.single-slot {
+  padding: 0 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
 .calendar-slot.selected {
   background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
   color: #0f4c81;
