@@ -380,7 +380,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
 
   const selectionSummary = selectionRange
     ? formatRangeLabel(selectionRange.start, selectionRange.end)
-    : 'Seleziona due punti sul calendario per definire l\'intervallo.';
+    : 'Seleziona uno slot e poi quelli adiacenti per allungare la prenotazione.';
 
   return (
     <div className="popup-prenotazione">
@@ -405,7 +405,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
           <div className="calendar-toolbar">
             <div>
               <h3>{weekTitle}</h3>
-              <p>{loadingReservations ? 'Caricamento prenotazioni...' : 'La vista include solo oggi e domani. Le celle rosse sono occupate, quelle azzurre sono selezionate.'}</p>
+              <p>{loadingReservations ? 'Caricamento prenotazioni...' : 'La vista include solo oggi e domani. Le celle rosse sono occupate, quelle azzurre sono la prenotazione in selezione.'}</p>
             </div>
 
             <button type="button" className="btn-ghost" onClick={clearSelection}>
