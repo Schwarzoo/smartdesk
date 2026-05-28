@@ -235,33 +235,33 @@ function PopupPrenotazione({ tavoloId, onClose }) {
 
     const dayKey = toDateKey(day);
 
-    if (!selectedStart || selectedStart.dateKey !== dayKey || selectedEnd !== null) {
+    if (!selectedStart || selectedStart.dateKey !== dayKey) {
       setSelectedStart({ dateKey: dayKey, slotIndex });
-      setSelectedEnd(null);
+      setSelectedEnd(slotIndex);
       return;
     }
 
-    if (slotIndex < selectedStart.slotIndex) {
-      setSelectedStart({ dateKey: dayKey, slotIndex });
-      setSelectedEnd(null);
+    const currentStart = Math.min(selectedStart.slotIndex, selectionEndIndex ?? selectedStart.slotIndex);
+    const currentEnd = Math.max(selectedStart.slotIndex, selectionEndIndex ?? selectedStart.slotIndex);
+
+    if (slotIndex >= currentStart && slotIndex <= currentEnd) {
       return;
     }
 
-    const selectionStart = getSlotStart(day, selectedStart.slotIndex);
-    const selectionEnd = getSlotEnd(day, slotIndex);
-    const dayReservations = reservationsByDay.get(dayKey) || [];
-
-    const isRangeFree = !dayReservations.some((reservation) =>
-      overlaps(selectionStart, selectionEnd, reservation.start, reservation.end)
-    );
-
-    if (!isRangeFree) {
+    if (slotIndex === currentStart - 1) {
       setSelectedStart({ dateKey: dayKey, slotIndex });
-      setSelectedEnd(null);
+      setSelectedEnd(currentEnd);
       return;
     }
 
-    setSelectedEnd(slotIndex);
+    if (slotIndex === currentEnd + 1) {
+      setSelectedStart({ dateKey: dayKey, slotIndex: currentStart });
+      setSelectedEnd(slotIndex);
+      return;
+    }
+
+    setSelectedStart(null);
+    setSelectedEnd(null);
   };
 
   const convertSelectionToUnix = () => {
@@ -477,11 +477,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                     const cellContent = status.type === 'reserved' && status.isStart
                       ? `Occupato · ${reservationLabel}`
                       : status.type === 'selected' && status.isStart
-                        ? selectedEnd !== null
-                          ? 'Prenotazione'
-                          : 'Inizio'
-                        : status.type === 'selected' && status.isEnd
-                          ? 'Fine'
+                        ? 'Prenotazione'
                           : '';
 
                     if (status.type === 'free') {
