@@ -477,7 +477,9 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                     const cellContent = status.type === 'reserved' && status.isStart
                       ? `Occupato · ${reservationLabel}`
                       : status.type === 'selected' && status.isStart
-                        ? 'Inizio'
+                        ? selectedEnd !== null
+                          ? 'Prenotazione'
+                          : 'Inizio'
                         : status.type === 'selected' && status.isEnd
                           ? 'Fine'
                           : '';
