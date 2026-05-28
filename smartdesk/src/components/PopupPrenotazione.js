@@ -68,8 +68,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
   const [nome, setNome] = useState('');
   const [reservations, setReservations] = useState([]);
   const [loadingReservations, setLoadingReservations] = useState(true);
-  const [selectedStart, setSelectedStart] = useState(null);
-  const [selectedEnd, setSelectedEnd] = useState(null);
+  const [selection, setSelection] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingEliminaTutte, setLoadingEliminaTutte] = useState(false);
 
@@ -114,8 +113,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
     };
 
     loadReservations();
-    setSelectedStart(null);
-    setSelectedEnd(null);
+    setSelection(null);
 
     return () => {
       cancelled = true;
@@ -148,19 +146,20 @@ function PopupPrenotazione({ tavoloId, onClose }) {
     return grouped;
   }, [reservations]);
 
-  const selectionEndIndex = selectedStart ? selectedEnd ?? selectedStart.slotIndex : null;
+  const selectionStartIndex = selection ? Math.min(selection.startIndex, selection.endIndex) : null;
+  const selectionEndIndex = selection ? Math.max(selection.startIndex, selection.endIndex) : null;
 
   const selectionRange = useMemo(() => {
-    if (!selectedStart) {
+    if (!selection || selectionStartIndex === null || selectionEndIndex === null) {
       return null;
     }
 
-    const day = fromDateKey(selectedStart.dateKey);
-    const start = getSlotStart(day, selectedStart.slotIndex);
-    const end = getSlotEnd(day, selectionEndIndex ?? selectedStart.slotIndex);
+    const day = fromDateKey(selection.dateKey);
+    const start = getSlotStart(day, selectionStartIndex);
+    const end = getSlotEnd(day, selectionEndIndex);
 
     return { start, end };
-  }, [selectedStart, selectionEndIndex]);
+  }, [selection, selectionStartIndex, selectionEndIndex]);
 
   const weekTitle = `${formatDayLabel(weekDays[0])} - ${formatDayLabel(weekDays[weekDays.length - 1])}`;
 
@@ -199,9 +198,9 @@ function PopupPrenotazione({ tavoloId, onClose }) {
       };
     }
 
-    if (selectedStart && selectedStart.dateKey === dayKey) {
-      const startIndex = selectedStart.slotIndex;
-      const endIndex = selectionEndIndex ?? selectedStart.slotIndex;
+    if (selection && selection.dateKey === dayKey) {
+      const startIndex = selectionStartIndex;
+      const endIndex = selectionEndIndex;
 
       if (slotIndex >= startIndex && slotIndex <= endIndex) {
         return {
@@ -235,33 +234,29 @@ function PopupPrenotazione({ tavoloId, onClose }) {
 
     const dayKey = toDateKey(day);
 
-    if (!selectedStart || selectedStart.dateKey !== dayKey) {
-      setSelectedStart({ dateKey: dayKey, slotIndex });
-      setSelectedEnd(slotIndex);
+    if (!selection || selection.dateKey !== dayKey) {
+      setSelection({ dateKey: dayKey, startIndex: slotIndex, endIndex: slotIndex });
       return;
     }
 
-    const currentStart = Math.min(selectedStart.slotIndex, selectionEndIndex ?? selectedStart.slotIndex);
-    const currentEnd = Math.max(selectedStart.slotIndex, selectionEndIndex ?? selectedStart.slotIndex);
+    const currentStart = selectionStartIndex;
+    const currentEnd = selectionEndIndex;
 
     if (slotIndex >= currentStart && slotIndex <= currentEnd) {
       return;
     }
 
     if (slotIndex === currentStart - 1) {
-      setSelectedStart({ dateKey: dayKey, slotIndex });
-      setSelectedEnd(currentEnd);
+      setSelection({ dateKey: dayKey, startIndex: slotIndex, endIndex: currentEnd });
       return;
     }
 
     if (slotIndex === currentEnd + 1) {
-      setSelectedStart({ dateKey: dayKey, slotIndex: currentStart });
-      setSelectedEnd(slotIndex);
+      setSelection({ dateKey: dayKey, startIndex: currentStart, endIndex: slotIndex });
       return;
     }
 
-    setSelectedStart(null);
-    setSelectedEnd(null);
+    setSelection(null);
   };
 
   const convertSelectionToUnix = () => {
@@ -374,8 +369,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
   };
 
   const clearSelection = () => {
-    setSelectedStart(null);
-    setSelectedEnd(null);
+    setSelection(null);
   };
 
   const selectionSummary = selectionRange
