@@ -176,6 +176,7 @@
   margin: 1px;
   border-radius: 12px;
   padding: 10px 8px;
+  box-sizing: border-box;
   align-self: stretch;
   justify-self: stretch;
   height: calc(100% - 2px);
@@ -198,6 +199,7 @@
   margin: 1px;
   border-radius: 12px;
   padding: 10px 8px;
+  box-sizing: border-box;
   align-self: stretch;
   justify-self: stretch;
   height: calc(100% - 2px);
