@@ -193,6 +193,9 @@ function PopupPrenotazione({ tavoloId, onClose }) {
         reservation,
         isStart: slotIndex === reservationStartIndex,
         isEnd: slotIndex === reservationEndIndex,
+        startIndex: reservationStartIndex,
+        endIndex: reservationEndIndex,
+        span: reservationEndIndex - reservationStartIndex + 1,
       };
     }
 
@@ -427,9 +430,14 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                     const status = getCellStatus(day, slotIndex);
                     const dayKey = toDateKey(day);
 
+                    if (status.type === 'reserved' && !status.isStart) {
+                      return null;
+                    }
+
                     const className = [
                       'calendar-slot',
                       status.type,
+                      status.type === 'reserved' ? 'reservation-block' : '',
                       status.isStart ? 'is-start' : '',
                       status.isEnd ? 'is-end' : '',
                     ].filter(Boolean).join(' ');
@@ -452,6 +460,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                           type="button"
                           key={dayKey}
                           className={className}
+                          style={{ gridRow: slotIndex + 2, gridColumn: weekDays.indexOf(day) + 2 }}
                           onClick={() => handleSlotClick(day, slotIndex)}
                           title={`${formatDayLabel(day)} ${formatHourLabel(getSlotStart(day, slotIndex))}`}
                         >
@@ -461,7 +470,15 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                     }
 
                     return (
-                      <div key={dayKey} className={className} title={reservationLabel}>
+                      <div
+                        key={dayKey}
+                        className={className}
+                        style={{
+                          gridRow: `${status.startIndex + 2} / span ${status.span}`,
+                          gridColumn: weekDays.indexOf(day) + 2,
+                        }}
+                        title={reservationLabel}
+                      >
                         {cellContent}
                       </div>
                     );
