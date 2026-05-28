@@ -259,6 +259,37 @@ function PopupPrenotazione({ tavoloId, onClose }) {
     setSelection(null);
   };
 
+  const handleSelectionBlockClick = (day, event) => {
+    if (!selection || selection.dateKey !== toDateKey(day)) {
+      return;
+    }
+
+    const currentStart = selectionStartIndex;
+    const currentEnd = selectionEndIndex;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickY = event.clientY - rect.top;
+    const clickOnLowerHalf = clickY >= rect.height / 2;
+
+    if (clickOnLowerHalf) {
+      const nextSlotIndex = currentEnd + 1;
+      if (nextSlotIndex < SLOT_COUNT) {
+        const nextStatus = getCellStatus(day, nextSlotIndex);
+        if (nextStatus.type === 'free') {
+          setSelection({ dateKey: selection.dateKey, startIndex: currentStart, endIndex: nextSlotIndex });
+        }
+      }
+      return;
+    }
+
+    const previousSlotIndex = currentStart - 1;
+    if (previousSlotIndex >= 0) {
+      const previousStatus = getCellStatus(day, previousSlotIndex);
+      if (previousStatus.type === 'free') {
+        setSelection({ dateKey: selection.dateKey, startIndex: previousSlotIndex, endIndex: currentEnd });
+      }
+    }
+  };
+
   const convertSelectionToUnix = () => {
     if (!selectionRange) {
       return null;
@@ -494,6 +525,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                         key={dayKey}
                         className={className}
                         style={cellStyle}
+                        onClick={status.type === 'selected' ? (event) => handleSelectionBlockClick(day, event) : undefined}
                         title={reservationLabel}
                       >
                         {cellContent}
