@@ -68,7 +68,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
   const [nome, setNome] = useState('');
   const [reservations, setReservations] = useState([]);
   const [loadingReservations, setLoadingReservations] = useState(true);
-  const [selection, setSelection] = useState(null);
+  const [selectedRangeState, setSelectedRangeState] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingEliminaTutte, setLoadingEliminaTutte] = useState(false);
 
@@ -113,7 +113,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
     };
 
     loadReservations();
-    setSelection(null);
+    setSelectedRangeState(null);
 
     return () => {
       cancelled = true;
@@ -146,20 +146,17 @@ function PopupPrenotazione({ tavoloId, onClose }) {
     return grouped;
   }, [reservations]);
 
-  const selectionStartIndex = selection ? Math.min(selection.startIndex, selection.endIndex) : null;
-  const selectionEndIndex = selection ? Math.max(selection.startIndex, selection.endIndex) : null;
-
   const selectionRange = useMemo(() => {
-    if (!selection || selectionStartIndex === null || selectionEndIndex === null) {
+    if (!selectedRangeState) {
       return null;
     }
 
-    const day = fromDateKey(selection.dateKey);
-    const start = getSlotStart(day, selectionStartIndex);
-    const end = getSlotEnd(day, selectionEndIndex);
+    const day = fromDateKey(selectedRangeState.dateKey);
+    const start = getSlotStart(day, selectedRangeState.startIndex);
+    const end = getSlotEnd(day, selectedRangeState.endIndex);
 
     return { start, end };
-  }, [selection, selectionStartIndex, selectionEndIndex]);
+  }, [selectedRangeState]);
 
   const weekTitle = `${formatDayLabel(weekDays[0])} - ${formatDayLabel(weekDays[weekDays.length - 1])}`;
 
@@ -198,9 +195,9 @@ function PopupPrenotazione({ tavoloId, onClose }) {
       };
     }
 
-    if (selection && selection.dateKey === dayKey) {
-      const startIndex = selectionStartIndex;
-      const endIndex = selectionEndIndex;
+    if (selectedRangeState && selectedRangeState.dateKey === dayKey) {
+      const startIndex = selectedRangeState.startIndex;
+      const endIndex = selectedRangeState.endIndex;
 
       if (slotIndex >= startIndex && slotIndex <= endIndex) {
         return {
@@ -234,60 +231,51 @@ function PopupPrenotazione({ tavoloId, onClose }) {
 
     const dayKey = toDateKey(day);
 
-    if (!selection || selection.dateKey !== dayKey) {
-      setSelection({ dateKey: dayKey, startIndex: slotIndex, endIndex: slotIndex });
+    if (!selectedRangeState || selectedRangeState.dateKey !== dayKey) {
+      setSelectedRangeState({
+        dateKey: dayKey,
+        startIndex: slotIndex,
+        endIndex: slotIndex,
+      });
       return;
     }
 
-    const currentStart = selectionStartIndex;
-    const currentEnd = selectionEndIndex;
+    const { startIndex, endIndex } = selectedRangeState;
+    const isAdjacent = slotIndex === startIndex - 1 || slotIndex === endIndex + 1;
 
-    if (slotIndex >= currentStart && slotIndex <= currentEnd) {
+    if (!isAdjacent) {
+      setSelectedRangeState({
+        dateKey: dayKey,
+        startIndex: slotIndex,
+        endIndex: slotIndex,
+      });
       return;
     }
 
-    if (slotIndex === currentStart - 1) {
-      setSelection({ dateKey: dayKey, startIndex: slotIndex, endIndex: currentEnd });
+    const nextStartIndex = Math.min(startIndex, slotIndex);
+    const nextEndIndex = Math.max(endIndex, slotIndex);
+    const selectionStart = getSlotStart(day, nextStartIndex);
+    const selectionEnd = getSlotEnd(day, nextEndIndex);
+    const dayReservations = reservationsByDay.get(dayKey) || [];
+
+    const isRangeFree = !dayReservations.some((reservation) =>
+      overlaps(selectionStart, selectionEnd, reservation.start, reservation.end)
+    );
+
+    if (!isRangeFree) {
+      setSelectedRangeState({
+        dateKey: dayKey,
+        startIndex: slotIndex,
+        endIndex: slotIndex,
+      });
       return;
     }
 
-    if (slotIndex === currentEnd + 1) {
-      setSelection({ dateKey: dayKey, startIndex: currentStart, endIndex: slotIndex });
-      return;
-    }
-
-    setSelection(null);
-  };
-
-  const handleSelectionBlockClick = (day, event) => {
-    if (!selection || selection.dateKey !== toDateKey(day)) {
-      return;
-    }
-
-    const currentStart = selectionStartIndex;
-    const currentEnd = selectionEndIndex;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const clickY = event.clientY - rect.top;
-    const clickOnLowerHalf = clickY >= rect.height / 2;
-
-    if (clickOnLowerHalf) {
-      const nextSlotIndex = currentEnd + 1;
-      if (nextSlotIndex < SLOT_COUNT) {
-        const nextStatus = getCellStatus(day, nextSlotIndex);
-        if (nextStatus.type === 'free') {
-          setSelection({ dateKey: selection.dateKey, startIndex: currentStart, endIndex: nextSlotIndex });
-        }
-      }
-      return;
-    }
-
-    const previousSlotIndex = currentStart - 1;
-    if (previousSlotIndex >= 0) {
-      const previousStatus = getCellStatus(day, previousSlotIndex);
-      if (previousStatus.type === 'free') {
-        setSelection({ dateKey: selection.dateKey, startIndex: previousSlotIndex, endIndex: currentEnd });
-      }
-    }
+    setSelectedRangeState({
+      dateKey: dayKey,
+      startIndex: nextStartIndex,
+      endIndex: nextEndIndex,
+    });
   };
 
   const convertSelectionToUnix = () => {
@@ -400,12 +388,12 @@ function PopupPrenotazione({ tavoloId, onClose }) {
   };
 
   const clearSelection = () => {
-    setSelection(null);
+    setSelectedRangeState(null);
   };
 
   const selectionSummary = selectionRange
     ? formatRangeLabel(selectionRange.start, selectionRange.end)
-    : 'Seleziona uno slot e poi quelli adiacenti per allungare la prenotazione.';
+    : 'Seleziona due punti sul calendario per definire l\'intervallo.';
 
   return (
     <div className="popup-prenotazione">
@@ -430,7 +418,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
           <div className="calendar-toolbar">
             <div>
               <h3>{weekTitle}</h3>
-              <p>{loadingReservations ? 'Caricamento prenotazioni...' : 'La vista include solo oggi e domani. Le celle rosse sono occupate, quelle azzurre sono la prenotazione in selezione.'}</p>
+              <p>{loadingReservations ? 'Caricamento prenotazioni...' : 'La vista include solo oggi e domani. Le celle rosse sono occupate, quelle azzurre sono selezionate.'}</p>
             </div>
 
             <button type="button" className="btn-ghost" onClick={clearSelection}>
@@ -525,7 +513,6 @@ function PopupPrenotazione({ tavoloId, onClose }) {
                         key={dayKey}
                         className={className}
                         style={cellStyle}
-                        onClick={status.type === 'selected' ? (event) => handleSelectionBlockClick(day, event) : undefined}
                         title={reservationLabel}
                       >
                         {cellContent}
