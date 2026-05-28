@@ -32,4 +32,5 @@
 .popup-content {
   position: relative;
   z-index: 1001;
+  width: min(96vw, 1240px);
 }

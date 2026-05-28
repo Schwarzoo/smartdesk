@@ -1,76 +1,360 @@
 .popup-prenotazione {
-  padding: 20px;
-  border: 1px solid #007bff;
-  margin: 20px;
-  max-width: 400px;
-  background-color: white;
-  border-radius: 10px;
+  width: min(1240px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid rgba(47, 62, 82, 0.14);
+  background:
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.14), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f5f7fb 100%);
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
+  color: #102033;
 }
 
-.popup-prenotazione h2 {
-  margin-top: 0;
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.popup-eyebrow {
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.popup-prenotazione h2,
+.calendar-toolbar h3 {
+  margin: 0;
+}
+
+.popup-description,
+.calendar-toolbar p,
+.calendar-help {
+  margin: 8px 0 0;
+  color: #526177;
+  line-height: 1.5;
+}
+
+.popup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.popup-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+}
+
+.calendar-panel,
+.booking-panel {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+}
+
+.calendar-panel {
+  padding: 18px;
+  min-width: 0;
+}
+
+.booking-panel {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-self: start;
+}
+
+.calendar-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: 72px repeat(2, minmax(210px, 1fr));
+  grid-auto-rows: 22px;
+  gap: 1px;
+  background: rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.calendar-corner,
+.day-header,
+.time-label,
+.calendar-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  font-size: 12px;
+}
+
+.calendar-corner,
+.day-header,
+.time-label {
+  background: #f8fafc;
+  color: #526177;
+  font-weight: 700;
+}
+
+.calendar-corner {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.day-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  text-transform: capitalize;
+}
+
+.time-label {
+  justify-content: flex-end;
+  padding-right: 10px;
+  background: #f8fafc;
+  color: #7c8aa0;
+}
+
+.calendar-slot {
+  border: 0;
+  padding: 0 8px;
+  text-align: left;
+  justify-content: flex-start;
+  border-radius: 0;
+  background: #ffffff;
+  color: #102033;
+  cursor: pointer;
+  transition: background-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.calendar-slot:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.18);
+}
+
+.calendar-slot.free {
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+}
+
+.calendar-slot.past {
+  background: #f4f6f8;
+  color: #9aa6b2;
+  cursor: not-allowed;
+}
+
+.calendar-slot.reserved {
+  background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+  color: #7f1d1d;
+  cursor: not-allowed;
+  font-weight: 600;
+}
+
+.calendar-slot.selected {
+  background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #0f4c81;
+  font-weight: 700;
+}
+
+.calendar-slot.is-start,
+.calendar-slot.is-end {
+  box-shadow: inset 0 0 0 2px rgba(15, 118, 110, 0.35);
+}
+
+.summary-card {
+  border-radius: 16px;
+  padding: 14px;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+.summary-label {
+  margin: 0 0 8px;
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.summary-card strong {
+  display: block;
+  line-height: 1.5;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .form-label {
-  display: block;
-  margin-bottom: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
 }
 
 .form-input {
-  padding: 8px;
   width: 100%;
   box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 14px;
+  background: #ffffff;
+  color: #102033;
+  outline: none;
 }
 
-.divider {
-  margin: 15px 0;
+.form-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
-.riepilogo {
-  margin-bottom: 15px;
+.btn-conferma,
+.btn-elimina-tutte,
+.btn-secondary,
+.btn-ghost {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 120ms ease, opacity 120ms ease, background-color 120ms ease;
+}
+
+.btn-conferma:hover:not(:disabled),
+.btn-elimina-tutte:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-ghost:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .btn-conferma {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
   width: 100%;
-  font-size: 16px;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
 }
 
 .btn-conferma:disabled {
-  background-color: #6c757d;
+  opacity: 0.55;
   cursor: not-allowed;
-}
-
-.btn-conferma:hover:not(:disabled) {
-  background-color: #0056b3;
 }
 
 .btn-elimina-tutte {
-  margin-top: 10px;
-  padding: 10px 20px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
   width: 100%;
-  font-size: 16px;
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
 }
 
-.btn-elimina-tutte:disabled {
-  background-color: #6c757d;
+.btn-elimina-tutte:disabled,
+.btn-secondary:disabled,
+.btn-ghost:disabled {
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
-.btn-elimina-tutte:hover:not(:disabled) {
-  background-color: #b02a37;
+.btn-secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #2563eb;
+  padding-inline: 0;
+}
+
+.btn-close {
+  width: 100%;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 14px 0 8px;
+  color: #526177;
+  font-size: 13px;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.legend-dot.reserved {
+  background: #f87171;
+}
+
+.legend-dot.free {
+  background: #93c5fd;
+}
+
+.legend-dot.selected {
+  background: #38bdf8;
+}
+
+@media (max-width: 1080px) {
+  .popup-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-panel {
+    order: -1;
+  }
+
+  .popup-header {
+    flex-direction: column;
+  }
+
+  .popup-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .popup-prenotazione {
+    width: min(100vw - 20px, 1240px);
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .calendar-grid {
+    grid-template-columns: 58px repeat(2, minmax(120px, 1fr));
+  }
+
+  .calendar-corner,
+  .day-header,
+  .time-label,
+  .calendar-slot {
+    font-size: 11px;
+  }
 }

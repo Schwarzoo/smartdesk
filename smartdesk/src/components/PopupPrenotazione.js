@@ -1,79 +1,325 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from 'react';
 import { inviaPrenotazione, ottieniPrenotazioni, eliminaPrenotazione } from '../utils/apiService';
 import './PopupPrenotazione.css';
 
+const START_HOUR = 8;
+const END_HOUR = 22;
+const SLOT_MINUTES = 15;
+const DAYS_VISIBLE = 2;
+const SLOT_COUNT = ((END_HOUR - START_HOUR) * 60) / SLOT_MINUTES;
+
+const pad = (value) => value.toString().padStart(2, '0');
+
+const toDateKey = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+
+const fromDateKey = (dateKey) => {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const addDays = (date, days) => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};
+
+const formatDayLabel = (date) =>
+  new Intl.DateTimeFormat('it-IT', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+  }).format(date);
+
+const formatHourLabel = (date) =>
+  new Intl.DateTimeFormat('it-IT', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+
+const getDayStart = (day) => {
+  const result = new Date(day);
+  result.setHours(START_HOUR, 0, 0, 0);
+  return result;
+};
+
+const getSlotStart = (day, slotIndex) => {
+  const result = getDayStart(day);
+  result.setMinutes(result.getMinutes() + slotIndex * SLOT_MINUTES);
+  return result;
+};
+
+const getSlotEnd = (day, slotIndex) => {
+  const result = getSlotStart(day, slotIndex);
+  result.setMinutes(result.getMinutes() + SLOT_MINUTES);
+  return result;
+};
+
+const isSameDay = (first, second) =>
+  first.getFullYear() === second.getFullYear() &&
+  first.getMonth() === second.getMonth() &&
+  first.getDate() === second.getDate();
+
+const isBeforeDay = (first, second) => toDateKey(first) < toDateKey(second);
+
+const overlaps = (firstStart, firstEnd, secondStart, secondEnd) =>
+  firstStart < secondEnd && secondStart < firstEnd;
+
 function PopupPrenotazione({ tavoloId, onClose }) {
   const [nome, setNome] = useState('');
-  const [data, setData] = useState('');
-  const [oraInizio, setOraInizio] = useState('');
-  const [oraFine, setOraFine] = useState('');
+  const [reservations, setReservations] = useState([]);
+  const [loadingReservations, setLoadingReservations] = useState(true);
+  const [selectedStart, setSelectedStart] = useState(null);
+  const [selectedEnd, setSelectedEnd] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingEliminaTutte, setLoadingEliminaTutte] = useState(false);
 
-  // Calcola oggi e domani in formato YYYY-MM-DD
-  const getDataOggi = () => {
-    const oggi = new Date();
-    return oggi.toISOString().split('T')[0];
+  const today = useMemo(() => {
+    const result = new Date();
+    result.setHours(0, 0, 0, 0);
+    return result;
+  }, []);
+
+  const weekStart = useMemo(() => {
+    const result = new Date(today);
+    result.setHours(0, 0, 0, 0);
+    return result;
+  }, [today]);
+
+  const weekDays = useMemo(
+    () => Array.from({ length: DAYS_VISIBLE }, (_, index) => addDays(weekStart, index)),
+    [weekStart]
+  );
+
+  const slots = useMemo(() => Array.from({ length: SLOT_COUNT }, (_, index) => index), []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadReservations = async () => {
+      setLoadingReservations(true);
+      const result = await ottieniPrenotazioni();
+
+      if (cancelled) {
+        return;
+      }
+
+      if (result.success) {
+        const table = result.data.find((item) => item.id === tavoloId);
+        setReservations(table?.reservations || []);
+      } else {
+        setReservations([]);
+      }
+
+      setLoadingReservations(false);
+    };
+
+    loadReservations();
+    setSelectedStart(null);
+    setSelectedEnd(null);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tavoloId]);
+
+  const reservationsByDay = useMemo(() => {
+    const grouped = new Map();
+
+    reservations.forEach((reservation) => {
+      const start = new Date(Number(reservation.oraInizio) * 1000);
+      const end = new Date(Number(reservation.oraFine) * 1000);
+      const key = toDateKey(start);
+
+      if (!grouped.has(key)) {
+        grouped.set(key, []);
+      }
+
+      grouped.get(key).push({
+        ...reservation,
+        start,
+        end,
+      });
+    });
+
+    grouped.forEach((dayReservations) => {
+      dayReservations.sort((first, second) => first.start - second.start);
+    });
+
+    return grouped;
+  }, [reservations]);
+
+  const selectionEndIndex = selectedStart ? selectedEnd ?? selectedStart.slotIndex : null;
+
+  const selectionRange = useMemo(() => {
+    if (!selectedStart) {
+      return null;
+    }
+
+    const day = fromDateKey(selectedStart.dateKey);
+    const start = getSlotStart(day, selectedStart.slotIndex);
+    const end = getSlotEnd(day, selectionEndIndex ?? selectedStart.slotIndex);
+
+    return { start, end };
+  }, [selectedStart, selectionEndIndex]);
+
+  const weekTitle = `${formatDayLabel(weekDays[0])} - ${formatDayLabel(weekDays[weekDays.length - 1])}`;
+
+  const formatRangeLabel = (start, end) =>
+    `${formatDayLabel(start)} · ${formatHourLabel(start)} - ${formatHourLabel(end)}`;
+
+  const getCellStatus = (day, slotIndex) => {
+    const cellStart = getSlotStart(day, slotIndex);
+    const cellEnd = getSlotEnd(day, slotIndex);
+    const dayKey = toDateKey(day);
+    const dayReservations = reservationsByDay.get(dayKey) || [];
+
+    const reservation = dayReservations.find((item) =>
+      overlaps(cellStart, cellEnd, item.start, item.end)
+    );
+
+    if (reservation) {
+      const dayStart = getDayStart(day);
+      const reservationStartIndex = Math.max(
+        0,
+        Math.floor((reservation.start - dayStart) / (SLOT_MINUTES * 60 * 1000))
+      );
+      const reservationEndIndex = Math.min(
+        SLOT_COUNT - 1,
+        Math.ceil((reservation.end - dayStart) / (SLOT_MINUTES * 60 * 1000)) - 1
+      );
+
+      return {
+        type: 'reserved',
+        reservation,
+        isStart: slotIndex === reservationStartIndex,
+        isEnd: slotIndex === reservationEndIndex,
+      };
+    }
+
+    if (selectedStart && selectedStart.dateKey === dayKey) {
+      const startIndex = selectedStart.slotIndex;
+      const endIndex = selectionEndIndex ?? selectedStart.slotIndex;
+
+      if (slotIndex >= startIndex && slotIndex <= endIndex) {
+        return {
+          type: 'selected',
+          isStart: slotIndex === startIndex,
+          isEnd: slotIndex === endIndex,
+        };
+      }
+    }
+
+    if (isBeforeDay(day, today)) {
+      return { type: 'past' };
+    }
+
+    if (isSameDay(day, today) && cellEnd <= new Date()) {
+      return { type: 'past' };
+    }
+
+    return { type: 'free' };
   };
 
-  const getDataDomani = () => {
-    const domani = new Date();
-    domani.setDate(domani.getDate() + 1);
-    return domani.toISOString().split('T')[0];
-  };
+  const handleSlotClick = (day, slotIndex) => {
+    const status = getCellStatus(day, slotIndex);
 
-  // Funzione per convertire data + ora in timestamp Unix
-  const convertiInUnix = (data, ora) => {
-    const [anno, mese, giorno] = data.split('-');
-    const [ore, minuti] = ora.split(':');
-    const date = new Date(anno, mese - 1, giorno, ore, minuti);
-    return Math.floor(date.getTime() / 1000);
-  };
-
-  // Funzione per confermare la prenotazione
-  const handleConferma = async () => {
-    if (!nome || !data || !oraInizio || !oraFine) {
-      alert('Compila tutti i campi!');
+    if (status.type !== 'free') {
       return;
     }
 
-    const timestampInizio = convertiInUnix(data, oraInizio);
-    const timestampFine = convertiInUnix(data, oraFine);
-    const adesso = Math.floor(Date.now() / 1000);
+    const dayKey = toDateKey(day);
 
-    if (timestampInizio < adesso) {
+    if (!selectedStart || selectedStart.dateKey !== dayKey || selectedEnd !== null) {
+      setSelectedStart({ dateKey: dayKey, slotIndex });
+      setSelectedEnd(null);
+      return;
+    }
+
+    if (slotIndex < selectedStart.slotIndex) {
+      setSelectedStart({ dateKey: dayKey, slotIndex });
+      setSelectedEnd(null);
+      return;
+    }
+
+    const selectionStart = getSlotStart(day, selectedStart.slotIndex);
+    const selectionEnd = getSlotEnd(day, slotIndex);
+    const dayReservations = reservationsByDay.get(dayKey) || [];
+
+    const isRangeFree = !dayReservations.some((reservation) =>
+      overlaps(selectionStart, selectionEnd, reservation.start, reservation.end)
+    );
+
+    if (!isRangeFree) {
+      setSelectedStart({ dateKey: dayKey, slotIndex });
+      setSelectedEnd(null);
+      return;
+    }
+
+    setSelectedEnd(slotIndex);
+  };
+
+  const convertSelectionToUnix = () => {
+    if (!selectionRange) {
+      return null;
+    }
+
+    return {
+      oraInizio: Math.floor(selectionRange.start.getTime() / 1000),
+      oraFine: Math.floor(selectionRange.end.getTime() / 1000),
+    };
+  };
+
+  const handleConferma = async () => {
+    if (!nome.trim()) {
+      alert('Compila il nome.');
+      return;
+    }
+
+    if (!selectionRange) {
+      alert('Seleziona uno slot libero nel calendario.');
+      return;
+    }
+
+    const rangeUnix = convertSelectionToUnix();
+    if (!rangeUnix) {
+      alert('Seleziona un intervallo valido.');
+      return;
+    }
+
+    const adesso = Math.floor(Date.now() / 1000);
+    if (rangeUnix.oraInizio < adesso) {
       alert('Non puoi effettuare una prenotazione in un periodo precedente a quello attuale.');
       return;
     }
 
-    if (timestampInizio >= timestampFine) {
-      alert('L\'orario di fine deve essere successivo all\'orario di inizio.');
+    if (rangeUnix.oraInizio >= rangeUnix.oraFine) {
+      alert('L\'intervallo selezionato non è valido.');
       return;
     }
 
     setLoading(true);
 
-    const datiPrenotazione = {
-      id: tavoloId, 
-      nome,
-      oraInizio: timestampInizio,
-      oraFine: timestampFine
-    };
-
-    const risultato = await inviaPrenotazione(datiPrenotazione);
+    const result = await inviaPrenotazione({
+      id: tavoloId,
+      nome: nome.trim(),
+      oraInizio: rangeUnix.oraInizio,
+      oraFine: rangeUnix.oraFine,
+    });
 
     setLoading(false);
 
-    if (risultato.success) {
-      alert(`Prenotazione confermata!\nNome: ${nome}\nData: ${data}\nDalle: ${oraInizio}\nAlle: ${oraFine}`);
+    if (result.success) {
+      alert(`Prenotazione confermata!\nNome: ${nome.trim()}\n${formatRangeLabel(selectionRange.start, selectionRange.end)}`);
       onClose();
-    } else {
-      if (risultato.error === 'Orario non disponibile') {
-        alert('Orario non disponibile');
-      } else {
-        alert(`Errore: ${risultato.error}`);
-      }
+      return;
     }
+
+    if (result.error === 'Orario non disponibile') {
+      alert('Orario non disponibile');
+      return;
+    }
+
+    alert(`Errore: ${result.error}`);
   };
 
   const handleEliminaTuttePrenotazioni = async () => {
@@ -117,110 +363,163 @@ function PopupPrenotazione({ tavoloId, onClose }) {
       return;
     }
 
+    setReservations([]);
     alert('Tutte le prenotazioni sono state eliminate.');
   };
 
-  // Funzione per generare gli orari con intervallo di 15 minuti
-  const generaOrari = () => {
-    const orari = [];
-    for (let ora = 8; ora <= 21; ora++) {
-      for (let minuti = 0; minuti < 60; minuti += 1) {
-        // Se siamo all'ora 21, ci fermiamo a 21:45
-        if (ora === 21 && minuti > 45) break;
-        
-        const oraStr = ora.toString().padStart(2, '0');
-        const minutiStr = minuti.toString().padStart(2, '0');
-        orari.push(`${oraStr}:${minutiStr}`);
-      }
-    }
-    return orari;
+  const clearSelection = () => {
+    setSelectedStart(null);
+    setSelectedEnd(null);
   };
+
+  const selectionSummary = selectionRange
+    ? formatRangeLabel(selectionRange.start, selectionRange.end)
+    : 'Seleziona due punti sul calendario per definire l\'intervallo.';
 
   return (
     <div className="popup-prenotazione">
-      <h2>Prenotazione Tavolo</h2>
-      
-      {/* Input Nome */}
-      <div className="form-group">
-        <label className="form-label">Nome:</label>
-        <input 
-          type="text"
-          placeholder="Inserisci il nome"
-          value={nome} 
-          onChange={e => setNome(e.target.value)} 
-          className="form-input"
-        />
+      <div className="popup-header">
+        <div>
+          <p className="popup-eyebrow">Tavolo {tavoloId}</p>
+          <h2>Prenotazione per oggi e domani</h2>
+          <p className="popup-description">
+            Clicca uno slot libero da 15 minuti e poi il punto finale per costruire l'intervallo.
+          </p>
+        </div>
+
+        <div className="popup-actions">
+          <button type="button" className="btn-secondary" disabled>
+            Oggi - Domani
+          </button>
+        </div>
       </div>
 
-      {/* Input Data */}
-      <div className="form-group">
-        <label className="form-label">Data:</label>
-        <input 
-          type="date"
-          value={data} 
-          onChange={e => setData(e.target.value)} 
-          min={getDataOggi()}
-          max={getDataDomani()}
-          className="form-input"
-        />
+      <div className="popup-layout">
+        <section className="calendar-panel">
+          <div className="calendar-toolbar">
+            <div>
+              <h3>{weekTitle}</h3>
+              <p>{loadingReservations ? 'Caricamento prenotazioni...' : 'La vista include solo oggi e domani. Le celle rosse sono occupate, quelle azzurre sono selezionate.'}</p>
+            </div>
+
+            <button type="button" className="btn-ghost" onClick={clearSelection}>
+              Svuota selezione
+            </button>
+          </div>
+
+          <div className="calendar-grid" role="grid" aria-label="Calendario prenotazioni tavolo">
+            <div className="calendar-corner">Ora</div>
+            {weekDays.map((day) => (
+              <div key={toDateKey(day)} className="day-header">
+                <span>{formatDayLabel(day)}</span>
+              </div>
+            ))}
+
+            {slots.map((slotIndex) => {
+              const slotLabelDate = getSlotStart(weekDays[0], slotIndex);
+              const timeLabel = slotIndex % 4 === 0 ? formatHourLabel(slotLabelDate) : '';
+
+              return (
+                <React.Fragment key={slotIndex}>
+                  <div className="time-label">{timeLabel}</div>
+
+                  {weekDays.map((day) => {
+                    const status = getCellStatus(day, slotIndex);
+                    const dayKey = toDateKey(day);
+
+                    const className = [
+                      'calendar-slot',
+                      status.type,
+                      status.isStart ? 'is-start' : '',
+                      status.isEnd ? 'is-end' : '',
+                    ].filter(Boolean).join(' ');
+
+                    const reservationLabel = status.type === 'reserved' && status.isStart
+                      ? `${formatHourLabel(status.reservation.start)}-${formatHourLabel(status.reservation.end)}`
+                      : '';
+
+                    const cellContent = status.type === 'reserved' && status.isStart
+                      ? `Occupato · ${reservationLabel}`
+                      : status.type === 'selected' && status.isStart
+                        ? 'Inizio'
+                        : status.type === 'selected' && status.isEnd
+                          ? 'Fine'
+                          : '';
+
+                    if (status.type === 'free') {
+                      return (
+                        <button
+                          type="button"
+                          key={dayKey}
+                          className={className}
+                          onClick={() => handleSlotClick(day, slotIndex)}
+                          title={`${formatDayLabel(day)} ${formatHourLabel(getSlotStart(day, slotIndex))}`}
+                        >
+                          {cellContent}
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <div key={dayKey} className={className} title={reservationLabel}>
+                        {cellContent}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
+          </div>
+
+          <p className="legend">
+            <span><i className="legend-dot reserved" />Occupato</span>
+            <span><i className="legend-dot free" />Libero</span>
+            <span><i className="legend-dot selected" />Selezionato</span>
+          </p>
+
+          <p className="calendar-help">
+            La vista mostra solo oggi e domani, con celle da 15 minuti. La prenotazione viene salvata solo se l'intervallo resta completamente libero.
+          </p>
+        </section>
+
+        <aside className="booking-panel">
+          <div className="form-group">
+            <label className="form-label">Nome prenotazione</label>
+            <input
+              type="text"
+              placeholder="Inserisci il nome"
+              value={nome}
+              onChange={(event) => setNome(event.target.value)}
+              className="form-input"
+            />
+          </div>
+
+          <div className="summary-card">
+            <p className="summary-label">Intervallo selezionato</p>
+            <strong>{selectionSummary}</strong>
+          </div>
+
+          <button
+            onClick={handleConferma}
+            disabled={loading || !selectionRange}
+            className="btn-conferma"
+          >
+            {loading ? 'Invio in corso...' : 'Conferma prenotazione'}
+          </button>
+
+          <button
+            onClick={handleEliminaTuttePrenotazioni}
+            disabled={loadingEliminaTutte}
+            className="btn-elimina-tutte"
+          >
+            {loadingEliminaTutte ? 'Eliminazione in corso...' : 'Elimina prenotazioni'}
+          </button>
+
+          <button type="button" onClick={onClose} className="btn-secondary btn-close">
+            Chiudi popup
+          </button>
+        </aside>
       </div>
-
-      {/* Select Ora Inizio */}
-      <div className="form-group">
-        <label className="form-label">Orario Inizio:</label>
-        <select 
-          value={oraInizio} 
-          onChange={e => setOraInizio(e.target.value)}
-          className="form-input"
-        >
-          <option value="">-- Seleziona Ora --</option>
-          {generaOrari().map((ora) => (
-            <option key={ora} value={ora}>{ora}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Select Ora Fine */}
-      <div className="form-group">
-        <label className="form-label">Orario Fine:</label>
-        <select 
-          value={oraFine} 
-          onChange={e => setOraFine(e.target.value)}
-          className="form-input"
-        >
-          <option value="">-- Seleziona Ora --</option>
-          {generaOrari().map((ora) => (
-            <option key={ora} value={ora}>{ora}</option>
-          ))}
-        </select>
-      </div>
-      
-      <hr className="divider" />
-
-      {/* Riepilogo */}
-      <p className="riepilogo">
-        Prenotazione per: <strong>{nome || '...'}</strong><br/>
-        Data: <strong>{data || '...'}</strong><br/>
-        Dalle: <strong>{oraInizio || '...'}</strong><br/>
-        Alle: <strong>{oraFine || '...'}</strong>
-      </p>
-
-      {/* Bottone Conferma */}
-      <button 
-        onClick={handleConferma}
-        disabled={loading}
-        className="btn-conferma"
-      >
-        {loading ? 'Invio in corso...' : 'Conferma Prenotazione'}
-      </button>
-
-      <button
-        onClick={handleEliminaTuttePrenotazioni}
-        disabled={loadingEliminaTutte}
-        className="btn-elimina-tutte"
-      >
-        {loadingEliminaTutte ? 'Eliminazione in corso...' : 'Elimina prenotazioni'}
-      </button>
     </div>
   );
 }
