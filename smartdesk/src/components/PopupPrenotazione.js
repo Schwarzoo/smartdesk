@@ -124,7 +124,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
   const generaOrari = () => {
     const orari = [];
     for (let ora = 8; ora <= 21; ora++) {
-      for (let minuti = 0; minuti < 60; minuti += 15) {
+      for (let minuti = 0; minuti < 60; minuti += 1) {
         // Se siamo all'ora 21, ci fermiamo a 21:45
         if (ora === 21 && minuti > 45) break;
         
