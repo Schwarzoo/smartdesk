@@ -81,11 +81,17 @@
 
 .popup-inner {
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 20px;
   box-shadow: 0 16px 40px rgba(16,30,45,0.16);
   padding: 22px 20px 18px 20px;
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Ensure the outer content also clips to the same rounded corner */
+.popup-content {
+  border-radius: 20px;
+  overflow: hidden;
 }
 
 .popup-close {
