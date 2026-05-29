@@ -1,9 +1,23 @@
 .tavolo {
   position: absolute;
-  width: 80px;
-  height: 40px;
-  background-color: #8B4513;
-  border-radius: 5px;
-  border: 2px solid #654321;
+  width: 140px;
+  height: 72px;
   cursor: pointer;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.tavolo:hover {
+  transform: translate(-50%, -56%) scale(1.02);
+}
+
+.tavolo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
 }
