@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-// Se siamo    fly.io, usa il volume persistente, altrimenti usa la directory locale
+// Se siamo su fly.io, usa il volume persistente, altrimenti usa la directory locale
 const DATA_DIR = process.env.FLY_APP_NAME ? '/data' : __dirname;
 const JSON_FILE = path.join(DATA_DIR, 'tavoli.json');
 
@@ -43,8 +43,60 @@ async function initializeJsonFile() {
   }
 }
 
-// Chiama l'inizializzazione all'avvio
-initializeJsonFile();
+// Chiama l'inizializzazione all'avvio e pianifica la pulizia delle prenotazioni scadute
+initializeJsonFile()
+  .then(() => {
+    // Esegui pulizia all'avvio
+    cleanupOldReservations().catch((err) => console.error('Errore cleanup all\'avvio:', err));
+
+    // Pianifica la pulizia ogni ora
+    setInterval(() => {
+      cleanupOldReservations().catch((err) => console.error('Errore cleanup periodico:', err));
+    }, 60 * 60 * 1000); // 1 ora
+  })
+  .catch((err) => {
+    console.error('Errore inizializzazione:', err);
+    process.exit(1);
+  });
+
+// Rimuove le prenotazioni con oraFine <= now (epoch seconds)
+async function cleanupOldReservations() {
+  try {
+    const data = await fs.readFile(JSON_FILE, 'utf8');
+    const tavoli = JSON.parse(data || '[]');
+    const now = Math.floor(Date.now() / 1000);
+
+    let modified = false;
+    let removedCount = 0;
+
+    for (const tavolo of tavoli) {
+      if (!Array.isArray(tavolo.reservations) || tavolo.reservations.length === 0) continue;
+
+      const before = tavolo.reservations.length;
+      tavolo.reservations = tavolo.reservations.filter((r) => Number(r.oraFine) > now);
+      const after = tavolo.reservations.length;
+
+      if (after !== before) {
+        modified = true;
+        removedCount += before - after;
+      }
+    }
+
+    if (modified) {
+      await fs.writeFile(JSON_FILE, JSON.stringify(tavoli, null, 2));
+      const formatter = new Intl.DateTimeFormat('it-IT', {
+        dateStyle: 'short',
+        timeStyle: 'medium',
+        timeZone: 'Europe/Rome',
+      });
+      console.log(`[cleanupOldReservations] Rimosse ${removedCount} prenotazioni scadute alle ${formatter.format(new Date())} (Europe/Rome)`);
+    } else {
+      console.log('[cleanupOldReservations] Nessuna prenotazione scaduta trovata.');
+    }
+  } catch (error) {
+    console.error('Errore durante cleanupOldReservations:', error);
+  }
+}
 
 // GET - Ottieni tutti i tavoli con le prenotazioni
 app.get('/api/tavoli', async (req, res) => {
