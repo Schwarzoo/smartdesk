@@ -10,16 +10,49 @@
   background: linear-gradient(180deg, #f5f7fa 0%, #e9eef6 100%);
 }
 
+/* Prevent text selection, focus outline and tap highlight inside the map */
+.mappa-container,
+.mappa-container *,
+.mappa-stage,
+.mappa-stage * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mappa-container:focus,
+.mappa-stage:focus,
+.tavolo:focus {
+  outline: none;
+}
+
 .mappa-container {
   position: relative;
-  width: min(1240px, 96vw);
-  height: min(840px, 92vh);
-  background: linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
+  width: min(1240px, 30vw);
+  height: min(840px, 50vh);
+  background-color: #f8fbff;
+  background-image:
+    linear-gradient(rgba(75, 95, 120, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(75, 95, 120, 0.05) 1px, transparent 1px),
+    linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
+  background-size: 48px 48px, 48px 48px, cover;
+  background-position: 0 0, 0 0, center;
   border-radius: 12px;
   box-shadow: 0 8px 30px rgba(20, 30, 60, 0.12);
   overflow: hidden;
   border: 1px solid rgba(20, 30, 60, 0.06);
   padding: 12px;
+}
+
+.mappa-stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .popup-overlay {
@@ -38,5 +71,52 @@
 .popup-content {
   position: relative;
   z-index: 1001;
-  width: min(96vw, 1240px);
+  width: min(92vw, 920px);
+  max-height: 86vh;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-inner {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(16,30,45,0.16);
+  padding: 22px 20px 18px 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.popup-close {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #2b3a39;
+}
+
+.popup-title {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #0f3a37;
+}
+
+.popup-subtitle {
+  margin-top: 14px;
+  margin-bottom: 6px;
+  font-size: 16px;
+}
+
+.popup-text, .popup-note {
+  margin: 0 0 8px 0;
+  color: #254040;
+  line-height: 1.45;
+}
+
+.popup-list {
+  margin: 0 0 8px 18px;
 }

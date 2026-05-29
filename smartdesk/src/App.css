@@ -1,11 +1,105 @@
 .App {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
   width: 100vw;
   height: 100vh;
   margin: 0;
+  padding: 28px 24px 20px;
+  box-sizing: border-box;
+  gap: 18px;
+  background: linear-gradient(180deg, #f6f8fb 0%, #eef3f8 100%);
+}
+
+.home-header {
+  width: min(1240px, 96vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  color: #172033;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(16, 30, 45, 0.06);
+}
+
+.home-eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #4e6b83;
+  font-weight: 700;
+}
+
+.home-header h1 {
+  margin: 0;
+  font-size: clamp(22px, 3.6vw, 40px);
+  line-height: 1.05;
+  font-weight: 700;
+  color: #102228;
+}
+
+.home-description {
+  margin: 0;
+  max-width: 840px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #536979;
+}
+
+.home-divider {
+  width: 48px;
+  height: 4px;
+  background: linear-gradient(90deg, #2b7a78, #67b7b2);
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.info-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 12px 0;
+  width: 100%;
   padding: 0;
+}
+
+.info-area .info-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff, #f0f6f5);
+  border: 1px solid rgba(16,30,45,0.08);
+  box-shadow: 0 6px 18px rgba(16,30,45,0.06);
+  font-weight: 600;
+  color: #0f3a37;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.info-area .info-button:active {
+  transform: translateY(1px);
+}
+
+.info-button--text {
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.info-area .info-button:focus {
+  outline: none;
+  box-shadow: 0 8px 22px rgba(15,58,55,0.12);
+  transform: translateY(-1px);
+}
+
+.info-area .info-button:hover {
+  transform: translateY(-1px);
 }
 
 .App-logo {

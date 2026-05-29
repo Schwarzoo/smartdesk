@@ -21,3 +21,16 @@
   display: block;
   pointer-events: none;
 }
+
+/* ensure tavolo itself doesn't show focus outline or allow text selection */
+.tavolo {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tavolo:focus {
+  outline: none;
+}
