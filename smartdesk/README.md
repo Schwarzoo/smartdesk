@@ -1,70 +1,116 @@
-# Getting Started with Create React App Test
+**SmartDesk — Sistema di prenotazione tavoli**
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Corso:** Embedded Software for the Internet of Things - UniTn
 
-## Available Scripts
+**Autore:** <br>
+Andrea Schwarz <andreaschwarz.a.d@gmail.com> <br>
+Leonardo Serafin <leonaardo.serafin04@gmail.com>
 
-In the project directory, you can run:
+**Anno :** 2026
 
-### `npm start`
+Breve descrizione
+------------------
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+SmartDesk è il lato web di un progetto per la gestione e la prenotazione di postazioni/tavoli in un ambiente condiviso (biblioteca, laboratorio, aula studio). Il progetto include un front-end React (`smartdesk/`) e un semplice servizio back-end (`server/`) per simulare le API di prenotazione.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Obiettivi del progetto
+----------------------
+- Realizzare un'interfaccia intuitiva per visualizzare una mappa dei tavoli e prenotare intervalli di tempo.
+- Gestire le prenotazioni con controlli di sovrapposizione e cancellazione.
+- Fornire UX responsive per desktop e dispositivi mobili.
 
-### `npm test`
+Caratteristiche principali
+-------------------------
+- Mappa interattiva delle postazioni con popup informativi (`InfoPopup`).
+- Calendario a celle (slot da 15 minuti) per prenotazioni (`PopupPrenotazione`).
+- Visualizzazione e cancellazione delle prenotazioni esistenti.
+- Styling moderno e accessibile; layout responsive.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Tecnologie e dipendenze
+-----------------------
+- Front-end: React (Create React App), CSS modulare.
+- Back-end: Node.js (server di sviluppo in `server/`).
+- Strumenti: npm, (opzionale) Docker per il deployment del servizio.
 
-### `npm run build`
+Requisiti
+---------
+- Node.js (>= 14)
+- npm (>= 6)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Installazione e avvio in locale
+-------------------------------
+1. Clona il repository:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+git clone <repo-url>
+cd smartdesk
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. Avvia il back-end di sviluppo (opzionale, se vuoi usare l'API simulata):
 
-### `npm run eject`
+```bash
+cd server
+npm install
+node server.js
+# oppure, se esiste uno script: npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+3. Avvia il front-end:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+cd ../smartdesk
+npm install
+npm start
+# apre l'app su http://localhost:3000
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Build per produzione
+---------------------
+Genera la build ottimizzata del front-end:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+cd smartdesk
+npm run build
+```
 
-## Learn More
+Il contenuto ottimizzato sarà disponibile in `smartdesk/build/` e può essere servito da un server statico o integrato nel `server/` secondo le esigenze di deployment.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Struttura del progetto (sintesi)
+-------------------------------
+- `server/` — codice e configurazione del servizio back-end (API fittizie, Dockerfile, fly.toml).
+- `smartdesk/` — applicazione React (sorgenti in `src/`, build in `build/`, file statici in `public/`).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+File e componenti rilevanti
+---------------------------
+- `smartdesk/src/components/InfoPopup.js` — popup informativo sulla mappa.
+- `smartdesk/src/components/PopupPrenotazione.js` — pannello di prenotazione e calendario.
+- `smartdesk/src/utils/apiService.js` — wrapper per chiamate API simulate.
 
-### Code Splitting
+Uso
+---
+1. Apri l'app in un browser (sviluppo: `http://localhost:3000` online: https://smartdesk-alpha.vercel.app/).
+2. Nella mappa clicca su un tavolo per visualizzare il popup informativo.
+3. Apri il pannello di prenotazione per selezionare gli slot liberi (15 minuti) e confermare.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Testing
+-------
+Eseguire i test unitari (se presenti) dal folder `smartdesk`:
 
-### Analyzing the Bundle Size
+```bash
+cd smartdesk
+npm test
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Contributi e linee guida
+------------------------
+Per suggerimenti o pull request:
+- Apri un issue descrivendo il problema o la proposta.
+- Invia una pull request con una descrizione chiara delle modifiche.
 
-### Making a Progressive Web App
+Contatti
+--------
+Per domande o chiarimenti: <br>
+Andrea Schwarz — andreaschwarz.a.d@gmail.com <br>
+Leonardo Serafin <leonaardo.serafin04@gmail.com>
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
