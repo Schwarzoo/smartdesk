@@ -215,7 +215,7 @@ function PopupPrenotazione({ tavoloId, onClose }) {
       return { type: 'past' };
     }
 
-    if (isSameDay(day, today) && cellEnd <= new Date()) {
+    if (isSameDay(day, today) && cellStart < new Date()) {
       return { type: 'past' };
     }
 
