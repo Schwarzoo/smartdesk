@@ -379,6 +379,12 @@ The main frontend flow is:
 
 The popup also contains an "Elimina prenotazioni" button. It currently deletes all reservations by loading all tables and calling `DELETE /api/prenotazioni/:id` for each reservation.
 
+## ESP32 Project
+
+Repository of the code of the linked ESP3 SmartDesk project:
+
+https://github.com/LeonardoSerafin/Smartdesk-code
+
 ## ESP32 Integration Notes
 
 The current backend already exposes enough API surface for an ESP32 device to:
